@@ -16,7 +16,18 @@ struct pthread_data{
 };
 
 void print_wall(int** arr, int Height, int Length) {
-	cout << "To be continued..." << endl;
+	for (int i = Height - 1; i >= 0; i--) {
+		for (int j = 0; j < 2 * Length; j++) {
+			if (arr[i][j] == 0)
+				cout << ' ';
+			else
+				cout << '=';
+		}
+		cout << endl;
+	}
+	for (int i = 0; i < 2 * Length; i++)
+		cout << '^';
+	cout << endl << endl;
 }
 
 // Функция постройки стены thread'ом
@@ -44,7 +55,7 @@ void* building(void* data_) {
 				}
 			}
 			else {
-				if (data.arr[cur_h - 1][cur_l + 1] == 1) {
+				if (data.arr[cur_h - 1][cur_l + 1] == 0) {
 					pthread_mutex_unlock(data.mutex);
 					usleep(1000);
 					continue;
@@ -54,7 +65,7 @@ void* building(void* data_) {
 		pthread_mutex_unlock(data.mutex);
 
 		// Когда мы поняли, что кирпич можно класть, кладём его
-		int sleep_time = data.Tmin + round(((double)rand() / RAND_MAX) * (data.Tmax - data.Tmin));
+		int sleep_time = data.Tmin * 1000000 + round(((double)rand() / RAND_MAX) * (data.Tmax - data.Tmin) * 1000000);
 		usleep(sleep_time);
 
 		// Отметим в массиве положенный кирпич и напечатаем стену
@@ -73,12 +84,12 @@ void* building(void* data_) {
 			if (cur_l == 0) {
 				data.arr[cur_h][cur_l] = 1;
 				cur_l++;
-			}
+			} else
 			if (cur_l == data.Length * 2 - 1) {
 				data.arr[cur_h][cur_l] = 1;
 				cur_l = 0;
 				cur_h += 2;
-			}
+			} else
 			if ((cur_l > 0) && (cur_l < data.Length * 2 - 1)) {
 				data.arr[cur_h][cur_l] = 1;
 				data.arr[cur_h][cur_l + 1] = 1;
@@ -98,6 +109,14 @@ int main () {
 	cin >> Height >> Length;
 	cin >> Tmin[0] >> Tmax[0];
 	cin >> Tmin[1] >> Tmax[1];
+	if ((Height < 0) || (Length < 0) || (Tmin[0] < 0) || (Tmin[1] < 0) || (Tmax[0] < 0) || (Tmax[0] < 0)) {
+		cout << "Wrong input" << endl;
+		return 1;
+	}
+	if ((Height == 0) || (Length == 0)) {
+		cout << "Wall is built!" << endl;
+		return 0;
+	}
 
 	// Инициализация переменных и массивов, инициализация thread'ов
 	int** arr = new int*[Height];
@@ -124,7 +143,8 @@ int main () {
 	for (int i = 0; i < 2; i++)
 		pthread_join(threads[i], NULL);
 
-	// Удаление массива
+	// Завершение работы
+	cout << "Wall is built!" << endl;
 	for (int i = 0; i < Height; i++)
 		delete[] arr[i];
 	delete[] arr;
