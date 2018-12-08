@@ -1,5 +1,8 @@
 #include <iostream>
 #include <pthread.h>
+#include <unistd.h>
+#include <ctime>
+#include <cmath>
 
 using namespace std;
 
@@ -12,21 +15,83 @@ struct pthread_data{
 	int Tmin, Tmax;
 };
 
+void print_wall(int** arr, int Height, int Length) {
+	cout << "To be continued..." << endl;
+}
+
 // Функция постройки стены thread'ом
 void* building(void* data_) {
 	pthread_data data = *(pthread_data*) data_;
-	if (data.me == 0)
-		cout << "Father is here!" << endl;
-	else
-		cout << "Son is here!" << endl;
-//	int cur_h = i;	// Начальные положения
-//	int cur_l = 0;
-//	while (cur_h < data.Height) {
-//		
-//	}
+	int cur_h = data.me;	// Начальные положения
+	int cur_l = 0;
+	while (cur_h < data.Height) {
+		// Заходим в критическую секцию и определяем, можно ли класть кирпич на текущую позицию
+		pthread_mutex_lock(data.mutex);
+		if (data.me == 0) {	// Если это отец
+			if (cur_h > 0)
+				if (data.arr[cur_h - 1][cur_l + 1] == 0) {
+					pthread_mutex_unlock(data.mutex);
+					usleep(1000);
+					continue;
+				}
+		}
+		else {		// Если это сын
+			if ((cur_l == 0) || (cur_l == data.Length * 2 - 1)) {
+				if (data.arr[cur_h - 1][cur_l] == 0) {
+					pthread_mutex_unlock(data.mutex);
+					usleep(1000);
+					continue;
+				}
+			}
+			else {
+				if (data.arr[cur_h - 1][cur_l + 1] == 1) {
+					pthread_mutex_unlock(data.mutex);
+					usleep(1000);
+					continue;
+				}
+			}
+		}
+		pthread_mutex_unlock(data.mutex);
+
+		// Когда мы поняли, что кирпич можно класть, кладём его
+		int sleep_time = data.Tmin + round(((double)rand() / RAND_MAX) * (data.Tmax - data.Tmin));
+		usleep(sleep_time);
+
+		// Отметим в массиве положенный кирпич и напечатаем стену
+		pthread_mutex_lock(data.mutex);
+		if (data.me == 0) {	// Если это отец
+			data.arr[cur_h][cur_l] = 1;
+			data.arr[cur_h][cur_l + 1] = 1;
+			if (cur_l < data.Length * 2 - 2)
+				cur_l += 2;
+			else {
+				cur_l = 0;
+				cur_h += 2;
+			}
+		}
+		else {		// Если это сын
+			if (cur_l == 0) {
+				data.arr[cur_h][cur_l] = 1;
+				cur_l++;
+			}
+			if (cur_l == data.Length * 2 - 1) {
+				data.arr[cur_h][cur_l] = 1;
+				cur_l = 0;
+				cur_h += 2;
+			}
+			if ((cur_l > 0) && (cur_l < data.Length * 2 - 1)) {
+				data.arr[cur_h][cur_l] = 1;
+				data.arr[cur_h][cur_l + 1] = 1;
+				cur_l += 2;
+			}
+		}
+		print_wall(data.arr, data.Height, data.Length);
+		pthread_mutex_unlock(data.mutex);
+	}
 }
 
 int main () {
+	srand(time(NULL));
 	// Ввод начальных данных задачи. 0 - отец, 1 - сын
 	int Height, Length;
 	int Tmin[2], Tmax[2];
@@ -59,6 +124,7 @@ int main () {
 	for (int i = 0; i < 2; i++)
 		pthread_join(threads[i], NULL);
 
+	// Удаление массива
 	for (int i = 0; i < Height; i++)
 		delete[] arr[i];
 	delete[] arr;
