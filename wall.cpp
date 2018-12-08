@@ -109,7 +109,8 @@ int main () {
 	cin >> Height >> Length;
 	cin >> Tmin[0] >> Tmax[0];
 	cin >> Tmin[1] >> Tmax[1];
-	if ((Height < 0) || (Length < 0) || (Tmin[0] < 0) || (Tmin[1] < 0) || (Tmax[0] < 0) || (Tmax[0] < 0)) {
+	if ((Height < 0) || (Length < 0) || (Tmin[0] < 0) || (Tmin[1] < 0)
+		       || (Tmax[0] < 0) || (Tmax[0] < 0) || (Tmin[0] > Tmax[0]) || (Tmin[1] > Tmax[1])) {
 		cout << "Wrong input" << endl;
 		return 1;
 	}
