@@ -16,6 +16,7 @@ struct pthread_data{
 };
 
 void print_wall(int** arr, int Height, int Length) {
+	system("clear");
 	for (int i = Height - 1; i >= 0; i--) {
 		for (int j = 0; j < 2 * Length; j++) {
 			if (arr[i][j] == 0)
