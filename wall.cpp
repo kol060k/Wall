@@ -119,6 +119,7 @@ int main () {
 		cout << "Wall is built!" << endl;
 		return 0;
 	}
+	system("clear");
 
 	// Инициализация переменных и массивов, инициализация thread'ов
 	int** arr = new int*[Height];
